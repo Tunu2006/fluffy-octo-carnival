@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Humidity Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+
+body {
+  background: url("assets/bg.jpg") no-repeat center center/cover;
+}
+
+.overlay {
+  background: rgba(0,0,0,0.65);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.top {
+  text-align: center;
+}
+
+.time {
+  font-size: 32px;
+}
+
+.message {
+  font-size: 22px;
+  margin-top: 8px;
+}
+
+.center {
+  text-align: center;
+}
+
+.humidity {
+  font-size: 90px;
+  font-weight: bold;
+}
+
+.status {
+  font-size: 26px;
+  margin-bottom: 15px;
+}
+
+.bar-box {
+  width: 80%;
+  height: 26px;
+  background: #333;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: auto;
+}
+
+.bar {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(to right, #00ff00, #ffff00, #ff0000);
+  transition: width 0.5s ease;
+}
+
+.controls {
+  margin-top: 20px;
+}
+
+select, button {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  margin: 5px;
+  cursor: pointer;
+}
+
+.footer {
+  font-size: 14px;
+  opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<audio id="bgm" loop>
+  <source src="assets/music.mp3" type="audio/mpeg">
+</audio>
+
+<div class="overlay">
+
+  <!-- TOP -->
+  <div class="top">
+    <div class="time" id="time"></div>
+    <div class="message" id="message"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="humidity" id="humidity">--%</div>
+    <div class="status" id="status">Waiting for data...</div>
+
+    <div class="bar-box">
+      <div class="bar" id="bar"></div>
+    </div>
+
+    <div class="controls">
+      <button onclick="enableExperience()">Enable Experience</button><br>
+
+      <select id="alertTime">
+        <option value="1">1 Minute</option>
+        <option value="5">5 Minutes</option>
+        <option value="30">30 Minutes</option>
+        <option value="60">1 Hour</option>
+        <option value="120">2 Hours</option>
+        <option value="1440">24 Hours</option>
+      </select>
+
+      <button onclick="saveTime()">Save Alert Time</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Smart Humidity Monitoring System
+  </div>
+
+</div>
+
+<script>
+/* ---------- MUSIC + NOTIFICATION ---------- */
+let notifyAllowed = false;
+let lastAlert = 0;
+
+function enableExperience() {
+  document.getElementById("bgm").play();
+  Notification.requestPermission().then(p => {
+    if (p === "granted") notifyAllowed = true;
+  });
+}
+
+/* ---------- DATE & TIME ---------- */
+setInterval(() => {
+  const now = new Date();
+  document.getElementById("time").innerText =
+    now.toLocaleDateString() + "  " + now.toLocaleTimeString();
+}, 1000);
+
+/* ---------- DAILY + FESTIVAL MESSAGE ---------- */
+const dailyMessages = [
+  "Healthy air makes a healthy life 🌿",
+  "Balanced humidity means better sleep 😴",
+  "Take care of your home, it takes care of you 🏠",
+  "Comfort starts with good air quality 💧"
+];
+
+const festivalMessages = {
+  "1-26": "🇮🇳 Happy Republic Day",
+  "8-15": "🇮🇳 Happy Independence Day",
+  "10-24": "🪔 Happy Diwali"
+};
+
+const today = new Date();
+const key = (today.getMonth()+1) + "-" + today.getDate();
+document.getElementById("message").innerText =
+  festivalMessages[key] || dailyMessages[today.getDate() % dailyMessages.length];
+
+/* ---------- SAVE ALERT TIME ---------- */
+function saveTime() {
+  localStorage.setItem("alertGap", document.getElementById("alertTime").value);
+  alert("Alert time saved");
+}
+
+/* ----------*
