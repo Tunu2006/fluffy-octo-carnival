@@ -13,11 +13,10 @@ html, body {
   font-family: Arial, sans-serif;
   color: #fff;
 }
-
 body {
-  background: url("assets/bg.jpg") no-repeat center center/cover;
+  /* Background image root folder se */
+  background: url("bg.jpg") no-repeat center center/cover;
 }
-
 .overlay {
   background: rgba(0,0,0,0.65);
   width: 100%;
@@ -29,54 +28,23 @@ body {
   padding: 30px;
   box-sizing: border-box;
 }
-
-.top {
-  text-align: center;
-}
-
-.time {
-  font-size: 32px;
-}
-
-.message {
-  font-size: 22px;
-  margin-top: 8px;
-}
-
-.center {
-  text-align: center;
-}
-
-.humidity {
-  font-size: 90px;
-  font-weight: bold;
-}
-
-.status {
-  font-size: 26px;
-  margin-bottom: 15px;
-}
-
+.top { text-align: center; }
+.time { font-size: 32px; }
+.message { font-size: 22px; margin-top: 8px; }
+.center { text-align: center; }
+.humidity { font-size: 90px; font-weight: bold; }
+.status { font-size: 26px; margin-bottom: 15px; }
 .bar-box {
-  width: 80%;
-  height: 26px;
-  background: #333;
-  border-radius: 20px;
-  overflow: hidden;
-  margin: auto;
+  width: 80%; height: 26px; background: #333;
+  border-radius: 20px; overflow: hidden; margin: auto;
 }
-
 .bar {
   height: 100%;
   width: 50%;
   background: linear-gradient(to right, #00ff00, #ffff00, #ff0000);
   transition: width 0.5s ease;
 }
-
-.controls {
-  margin-top: 20px;
-}
-
+.controls { margin-top: 20px; }
 select, button {
   padding: 10px;
   font-size: 16px;
@@ -85,40 +53,32 @@ select, button {
   margin: 5px;
   cursor: pointer;
 }
-
-.footer {
-  font-size: 14px;
-  opacity: 0.8;
-}
+.footer { font-size: 14px; opacity: 0.8; }
 </style>
 </head>
 
 <body>
 
 <audio id="bgm" loop>
-  <source src="assets/music.mp3" type="audio/mpeg">
+  <!-- Music root folder se -->
+  <source src="music.mp3" type="audio/mpeg">
 </audio>
 
 <div class="overlay">
-
-  <!-- TOP -->
   <div class="top">
     <div class="time" id="time"></div>
     <div class="message" id="message"></div>
   </div>
 
-  <!-- CENTER -->
   <div class="center">
     <div class="humidity" id="humidity">--%</div>
     <div class="status" id="status">Waiting for data...</div>
-
     <div class="bar-box">
       <div class="bar" id="bar"></div>
     </div>
 
     <div class="controls">
       <button onclick="enableExperience()">Enable Experience</button><br>
-
       <select id="alertTime">
         <option value="1">1 Minute</option>
         <option value="5">5 Minutes</option>
@@ -127,20 +87,14 @@ select, button {
         <option value="120">2 Hours</option>
         <option value="1440">24 Hours</option>
       </select>
-
       <button onclick="saveTime()">Save Alert Time</button>
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    Smart Humidity Monitoring System
-  </div>
-
+  <div class="footer">Smart Humidity Monitoring System</div>
 </div>
 
 <script>
-/* ---------- MUSIC + NOTIFICATION ---------- */
 let notifyAllowed = false;
 let lastAlert = 0;
 
@@ -151,36 +105,59 @@ function enableExperience() {
   });
 }
 
-/* ---------- DATE & TIME ---------- */
+/* DATE & TIME */
 setInterval(() => {
   const now = new Date();
   document.getElementById("time").innerText =
     now.toLocaleDateString() + "  " + now.toLocaleTimeString();
 }, 1000);
 
-/* ---------- DAILY + FESTIVAL MESSAGE ---------- */
+/* DAILY & FESTIVAL MESSAGE */
 const dailyMessages = [
   "Healthy air makes a healthy life 🌿",
   "Balanced humidity means better sleep 😴",
   "Take care of your home, it takes care of you 🏠",
   "Comfort starts with good air quality 💧"
 ];
-
 const festivalMessages = {
   "1-26": "🇮🇳 Happy Republic Day",
   "8-15": "🇮🇳 Happy Independence Day",
   "10-24": "🪔 Happy Diwali"
 };
+function updateMessage() {
+  const today = new Date();
+  const key = (today.getMonth()+1) + "-" + today.getDate();
+  document.getElementById("message").innerText =
+    festivalMessages[key] || dailyMessages[today.getDate() % dailyMessages.length];
+}
+updateMessage();
 
-const today = new Date();
-const key = (today.getMonth()+1) + "-" + today.getDate();
-document.getElementById("message").innerText =
-  festivalMessages[key] || dailyMessages[today.getDate() % dailyMessages.length];
-
-/* ---------- SAVE ALERT TIME ---------- */
+/* ALERT TIME */
 function saveTime() {
   localStorage.setItem("alertGap", document.getElementById("alertTime").value);
   alert("Alert time saved");
 }
 
-/* ----------*
+/* HUMIDITY (DUMMY → ESP32 LATER) */
+setInterval(() => {
+  let h = Math.floor(Math.random() * 40) + 30; // TEST VALUE
+  document.getElementById("humidity").innerText = h + "%";
+
+  let status = "Good";
+  if(h < 40) status = "Too Dry";
+  if(h > 60) status = "Too Humid";
+  document.getElementById("status").innerText = status;
+
+  document.getElementById("bar").style.width = h + "%";
+
+  // NOTIFICATION LOGIC
+  const now = Date.now();
+  const gap = (localStorage.getItem("alertGap") || 60) * 60000;
+  if(notifyAllowed && status !== "Good" && now - lastAlert > gap) {
+    new Notification("⚠️ Humidity Alert", { body: `Current: ${h}% (${status})` });
+    lastAlert = now;
+  }
+}, 3000);
+</script>
+</body>
+</html>
